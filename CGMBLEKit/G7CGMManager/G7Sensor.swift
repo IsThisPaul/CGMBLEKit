@@ -23,6 +23,9 @@ public protocol G7SensorDelegate: AnyObject {
 
     // If this returns true, then start following this sensor
     func sensor(_ sensor: G7Sensor, didDiscoverNewSensor name: String, activatedAt: Date) -> Bool
+
+    // This is triggered for connection/disconnection events, and enabling/disabling scan
+    func sensorConnectionStatusDidUpdate(_ sensor: G7Sensor)
 }
 
 public enum G7SensorError: Error {
@@ -44,8 +47,20 @@ extension G7SensorError: CustomStringConvertible {
     }
 }
 
+public enum G7SensorLifecycleState {
+    case searching
+    case warmup
+    case ok
+    case error
+    case failed
+    case expired
+}
+
 
 public final class G7Sensor: BluetoothManagerDelegate {
+
+    public static let lifetime = TimeInterval(hours: 10 * 24)
+    public static let warmupDuration = TimeInterval(minutes: 25)
 
     public weak var delegate: G7SensorDelegate?
 
@@ -58,6 +73,10 @@ public final class G7Sensor: BluetoothManagerDelegate {
 
     /// The last-observed calibration message
     private var lastCalibrationMessage: CalibrationDataRxMessage?
+
+    /// The date of last connection
+    private var lastConnection: Date?
+
 
     /// The backfill data buffer
     private var backfillBuffer: [G7BackfillMessage] = []
@@ -79,6 +98,15 @@ public final class G7Sensor: BluetoothManagerDelegate {
     public init(sensorID: String?) {
         self.sensorID = sensorID
         bluetoothManager.delegate = self
+        bluetoothManager.scanWhileConnecting = sensorID == nil
+    }
+
+    public func scanForNewSensor() {
+        self.sensorID = nil
+        bluetoothManager.disconnect()
+        bluetoothManager.forgetPeripheral()
+        bluetoothManager.scanWhileConnecting = true
+        bluetoothManager.scanForPeripheral()
     }
 
     public func resumeScanning() {
@@ -93,6 +121,10 @@ public final class G7Sensor: BluetoothManagerDelegate {
 
     public var isScanning: Bool {
         return bluetoothManager.isScanning
+    }
+
+    public var isConnected: Bool {
+        return bluetoothManager.isConnected
     }
 
     public var peripheralIdentifier: UUID? {
@@ -127,8 +159,10 @@ public final class G7Sensor: BluetoothManagerDelegate {
             return
         }
 
-        delegateQueue.async {
-            self.delegate?.sensorDidConnect(self)
+        if sensorID == peripheralManager.peripheral.name {
+            delegateQueue.async {
+                self.delegate?.sensorDidConnect(self)
+            }
         }
 
         peripheralManager.perform { (peripheral) in
@@ -145,8 +179,13 @@ public final class G7Sensor: BluetoothManagerDelegate {
 
     func bluetoothManager(_ manager: BluetoothManager, shouldConnectPeripheral peripheral: CBPeripheral) -> Bool {
 
-        /// The Dexcom G7 advertises a peripheral name of "DXCMxx"
-        if let name = peripheral.name, name.hasPrefix("DXCM") {
+        guard let name = peripheral.name else {
+            self.log.debug("Not connecting to unnamed peripheral: %{public}@", String(describing: peripheral))
+            return false
+        }
+
+        /// The Dexcom G7 advertises a peripheral name of "DXCMxx", and later reports a full name of "Dexcomxx"
+        if name.hasPrefix("DXCM") {
             // If we're following this name or if we're scanning, connect
             if let sensorName = sensorID, name.suffix(2) == sensorName.suffix(2) {
                 return true
@@ -154,7 +193,7 @@ public final class G7Sensor: BluetoothManagerDelegate {
                 return true
             }
         }
-        self.log.info("Not connecting to peripheral: %{public}@", peripheral.name ?? String(describing: peripheral))
+        self.log.info("Not connecting to peripheral: %{public}@", name)
         return false
     }
 
@@ -182,6 +221,8 @@ public final class G7Sensor: BluetoothManagerDelegate {
                     self.sensorID = name
                     self.activationDate = activationDate
                     self.delegate?.sensor(self, didRead: message)
+                    self.bluetoothManager.scanWhileConnecting = false
+                    self.bluetoothManager.stopScanning()
                 }
             }
         } else if sensorID != nil {
@@ -261,6 +302,13 @@ public final class G7Sensor: BluetoothManagerDelegate {
             self.log.debug("Ignoring authentication response: %{public}@", response.hexadecimalString)
         }
     }
+
+    func bluetoothManagerScanningStatusDidChange(_ manager: BluetoothManager) {
+        self.delegateQueue.async {
+            self.delegate?.sensorConnectionStatusDidUpdate(self)
+        }
+    }
+
 }
 
 

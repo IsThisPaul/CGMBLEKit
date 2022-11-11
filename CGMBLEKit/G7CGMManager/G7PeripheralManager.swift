@@ -1,8 +1,9 @@
 //
-//  PeripheralManager.swift
-//  xDripG5
+//  G7PeripheralManager.swift
+//  CGMBLEKit
 //
-//  Copyright © 2017 LoopKit Authors. All rights reserved.
+//  Created by Pete Schwamb on 11/11/22.
+//  Copyright © 2022 LoopKit Authors. All rights reserved.
 //
 
 import CoreBluetooth
@@ -10,9 +11,9 @@ import Foundation
 import os.log
 
 
-class PeripheralManager: NSObject {
+class G7PeripheralManager: NSObject {
 
-    private let log = OSLog(category: "PeripheralManager")
+    private let log = OSLog(category: "G7PeripheralManager")
 
     ///
     /// This is mutable, because CBPeripheral instances can seemingly become invalid, and need to be periodically re-fetched from CBCentralManager
@@ -52,7 +53,7 @@ class PeripheralManager: NSObject {
     // Confined to `queue`
     private var needsConfiguration = true
 
-    weak var delegate: PeripheralManagerDelegate? {
+    weak var delegate: G7PeripheralManagerDelegate? {
         didSet {
             queue.sync {
                 needsConfiguration = true
@@ -75,11 +76,11 @@ class PeripheralManager: NSObject {
 
 
 // MARK: - Nested types
-extension PeripheralManager {
+extension G7PeripheralManager {
     struct Configuration {
         var serviceCharacteristics: [CBUUID: [CBUUID]] = [:]
         var notifyingCharacteristics: [CBUUID: [CBUUID]] = [:]
-        var valueUpdateMacros: [CBUUID: (_ manager: PeripheralManager) -> Void] = [:]
+        var valueUpdateMacros: [CBUUID: (_ manager: G7PeripheralManager) -> Void] = [:]
     }
 
     enum CommandCondition {
@@ -91,20 +92,20 @@ extension PeripheralManager {
     }
 }
 
-protocol PeripheralManagerDelegate: AnyObject {
-    func peripheralManager(_ manager: PeripheralManager, didUpdateValueFor characteristic: CBCharacteristic)
+protocol G7PeripheralManagerDelegate: AnyObject {
+    func peripheralManager(_ manager: G7PeripheralManager, didUpdateValueFor characteristic: CBCharacteristic)
 
-    func peripheralManager(_ manager: PeripheralManager, didReadRSSI RSSI: NSNumber, error: Error?)
+    func peripheralManager(_ manager: G7PeripheralManager, didReadRSSI RSSI: NSNumber, error: Error?)
 
-    func peripheralManagerDidUpdateName(_ manager: PeripheralManager)
+    func peripheralManagerDidUpdateName(_ manager: G7PeripheralManager)
 
-    func completeConfiguration(for manager: PeripheralManager) throws
+    func completeConfiguration(for manager: G7PeripheralManager) throws
 }
 
 
 // MARK: - Operation sequence management
-extension PeripheralManager {
-    func configureAndRun(_ block: @escaping (_ manager: PeripheralManager) -> Void) -> (() -> Void) {
+extension G7PeripheralManager {
+    func configureAndRun(_ block: @escaping (_ manager: G7PeripheralManager) -> Void) -> (() -> Void) {
         return {
             if !self.needsConfiguration && self.peripheral.services == nil {
                 self.log.error("Configured peripheral has no services. Reconfiguring…")
@@ -137,7 +138,7 @@ extension PeripheralManager {
         }
     }
 
-    func perform(_ block: @escaping (_ manager: PeripheralManager) -> Void) {
+    func perform(_ block: @escaping (_ manager: G7PeripheralManager) -> Void) {
         queue.async(execute: configureAndRun(block))
     }
 
@@ -181,7 +182,7 @@ extension PeripheralManager {
 
 
 // MARK: - Synchronous Commands
-extension PeripheralManager {
+extension G7PeripheralManager {
     /// - Throws: PeripheralManagerError
     func runCommand(timeout: TimeInterval, command: () -> Void) throws {
         // Prelude
@@ -309,7 +310,7 @@ extension PeripheralManager {
 
 
 // MARK: - Delegate methods executed on the central's queue
-extension PeripheralManager: CBPeripheralDelegate {
+extension G7PeripheralManager: CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         commandLock.lock()
@@ -437,7 +438,7 @@ extension PeripheralManager: CBPeripheralDelegate {
 }
 
 
-extension PeripheralManager: CBCentralManagerDelegate {
+extension G7PeripheralManager: CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {
         case .poweredOn:
@@ -458,10 +459,10 @@ extension PeripheralManager: CBCentralManagerDelegate {
 }
 
 
-extension PeripheralManager {
+extension G7PeripheralManager {
     public override var debugDescription: String {
         var items = [
-            "## PeripheralManager",
+            "## G7PeripheralManager",
             "peripheral: \(peripheral)",
         ]
         queue.sync {

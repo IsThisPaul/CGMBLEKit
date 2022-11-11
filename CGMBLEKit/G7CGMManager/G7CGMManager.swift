@@ -12,6 +12,12 @@ import os.log
 import HealthKit
 
 
+
+public protocol G7StateObserver: AnyObject {
+    func g7StateDidUpdate(_ state: G7CGMManagerState?)
+    func g7ConnectionStatusDidChange()
+}
+
 public class G7CGMManager: CGMManager {
     private let log = OSLog(category: "G7CGMManager")
 
@@ -44,11 +50,17 @@ public class G7CGMManager: CGMManager {
                 delegate?.cgmManagerDidUpdateState(self)
                 delegate?.cgmManager(self, didUpdate: self.cgmManagerStatus)
             }
+
+            g7StateObservers.forEach { (observer) in
+                observer.g7StateDidUpdate(newValue)
+            }
         }
 
         return returnType
     }
     private let lockedState: Locked<G7CGMManagerState>
+
+    private let g7StateObservers = WeakSynchronizedSet<G7StateObserver>()
 
     public weak var cgmManagerDelegate: CGMManagerDelegate? {
         get {
@@ -86,6 +98,10 @@ public class G7CGMManager: CGMManager {
         return sensor.isScanning
     }
 
+    public var isConnected: Bool {
+        return sensor.isConnected
+    }
+
     public var sensorName: String? {
         return state.sensorID
     }
@@ -94,21 +110,56 @@ public class G7CGMManager: CGMManager {
         return state.activatedAt
     }
 
-    private(set) public var latestReading: G7GlucoseMessage? {
-        get {
-            return lockedLatestReading.value
+    public var sensorExpiresAt: Date? {
+        guard let activatedAt = sensorActivatedAt else {
+            return nil
         }
-        set {
-            lockedLatestReading.value = newValue
-        }
+        return activatedAt.addingTimeInterval(G7Sensor.lifetime)
     }
-    private let lockedLatestReading: Locked<G7GlucoseMessage?> = Locked(nil)
+
+    public var sensorFinishesWarmupAt: Date? {
+        guard let activatedAt = sensorActivatedAt else {
+            return nil
+        }
+        return activatedAt.addingTimeInterval(G7Sensor.warmupDuration)
+    }
+
+
+    public var latestReading: G7GlucoseMessage? {
+        return state.latestReading
+    }
+
+    public var lastConnect: Date? {
+        return state.latestConnect
+    }
 
     public let sensor: G7Sensor
 
     public var cgmManagerStatus: LoopKit.CGMManagerStatus {
         return CGMManagerStatus(hasValidSensorSession: true, device: device)
     }
+
+    public var lifecycleState: G7SensorLifecycleState {
+        if state.sensorID == nil {
+            return .searching
+        }
+        if let sensorExpiresAt = sensorExpiresAt, sensorExpiresAt.timeIntervalSinceNow < 0 {
+            return .expired
+        }
+        if let algorithmState = latestReading?.algorithmState {
+            if algorithmState.isInWarmup {
+                return .warmup
+            }
+            if algorithmState.sensorFailed {
+                return .failed
+            }
+            if algorithmState.isInSensorError {
+                return .error
+            }
+        }
+        return .ok
+    }
+
 
     public func fetchNewDataIfNeeded(_ completion: @escaping (LoopKit.CGMReadingResult) -> Void) {
 
@@ -159,6 +210,16 @@ public class G7CGMManager: CGMManager {
         return nil
     }
 
+    public func scanForNewSensor() {
+        logDeviceCommunication("Forgetting existing sensor and starting scan for new sensor.", type: .connection)
+
+        mutateState { state in
+            state.sensorID = nil
+            state.activatedAt = nil
+        }
+        sensor.scanForNewSensor()
+    }
+
     public var device: HKDevice? {
         return HKDevice(
             name: "CGMBLEKit",
@@ -183,6 +244,18 @@ public class G7CGMManager: CGMManager {
     }
 }
 
+extension G7CGMManager {
+    // MARK: - G7StateObserver
+
+    public func addStateObserver(_ observer: G7StateObserver, queue: DispatchQueue) {
+        g7StateObservers.insert(observer, queue: queue)
+    }
+
+    public func removeStateObserver(_ observer: G7StateObserver) {
+        g7StateObservers.removeElement(observer)
+    }
+}
+
 extension G7CGMManager: G7SensorDelegate {
     public func sensor(_ sensor: G7Sensor, didDiscoverNewSensor name: String, activatedAt: Date) -> Bool {
         logDeviceCommunication("New sensor \(name) discovered, activated at \(activatedAt)", type: .connection)
@@ -200,6 +273,9 @@ extension G7CGMManager: G7SensorDelegate {
     }
 
     public func sensorDidConnect(_ sensor: G7Sensor) {
+        mutateState { state in
+            state.latestConnect = Date()
+        }
         logDeviceCommunication("Sensor \(String(describing: sensor.peripheralIdentifier)) did connect", type: .connection)
     }
 
@@ -215,19 +291,15 @@ extension G7CGMManager: G7SensorDelegate {
             return
         }
 
-        latestReading = message
+        mutateState { state in
+            state.latestReading = message
+            state.latestReadingReceivedAt = Date()
+        }
 
         guard let activationDate = sensor.activationDate else {
             logDeviceCommunication("Unable to process sensor reading without activation date.", type: .error)
             return
         }
-
-
-//        guard glucose.state.hasReliableGlucose else {
-//            log.default("%{public}@: Unreliable glucose: %{public}@", #function, String(describing: glucose.state))
-//            updateDelegate(with: .error(CalibrationError.unreliableState(glucose.state)))
-//            return
-//        }
 
         guard let glucose = message.glucose else {
             updateDelegate(with: .noData)
@@ -304,6 +376,12 @@ extension G7CGMManager: G7SensorDelegate {
         }
 
         updateDelegate(with: .newData(samples))
+    }
+
+    public func sensorConnectionStatusDidUpdate(_ sensor: G7Sensor) {
+        g7StateObservers.forEach { (observer) in
+            observer.g7ConnectionStatusDidChange()
+        }
     }
 }
 

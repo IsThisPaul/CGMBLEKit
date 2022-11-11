@@ -236,6 +236,8 @@ public final class Transmitter: BluetoothManagerDelegate {
         }
     }
 
+    func bluetoothManagerScanningStatusDidChange(_ manager: BluetoothManager) { }
+
     func bluetoothManager(_ manager: BluetoothManager, peripheralManager: PeripheralManager, didReceiveControlResponse response: Data) {
         guard passiveModeEnabled else { return }
 

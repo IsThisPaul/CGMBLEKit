@@ -11,6 +11,17 @@ import CGMBLEKit
 import LoopKitUI
 import LoopKit
 
+public struct G7DeviceStatusHighlight: DeviceStatusHighlight, Equatable {
+    public let localizedMessage: String
+    public let imageName: String
+    public let state: DeviceStatusHighlightState
+    init(localizedMessage: String, imageName: String, state: DeviceStatusHighlightState) {
+        self.localizedMessage = localizedMessage
+        self.imageName = imageName
+        self.state = state
+    }
+}
+
 extension G7CGMManager: CGMManagerUI {
     public static var onboardingImage: UIImage? {
         return nil
@@ -33,7 +44,43 @@ extension G7CGMManager: CGMManagerUI {
 
     // TODO Placeholder.
     public var cgmStatusHighlight: DeviceStatusHighlight? {
-        return nil
+
+        if lifecycleState == .searching {
+            return G7DeviceStatusHighlight(
+                localizedMessage: LocalizedString("Searching for\nSensor", comment: "G7 Status highlight text for searching for sensor"),
+                imageName: "dot.radiowaves.left.and.right",
+                state: .normalCGM)
+        }
+
+        if lifecycleState == .expired {
+            return G7DeviceStatusHighlight(
+                localizedMessage: LocalizedString("Sensor\nExpired", comment: "G7 Status highlight text for sensor expired"),
+                imageName: "clock",
+                state: .normalCGM)
+        }
+
+        if let latestReadingReceivedAt = state.latestReadingReceivedAt, latestReadingReceivedAt.timeIntervalSinceNow < -.minutes(15) {
+            return G7DeviceStatusHighlight(
+                localizedMessage: LocalizedString("Signal\nLoss", comment: "G7 Status highlight text for signal loss"),
+                imageName: "exclamationmark.circle.fill",
+                state: .warning)
+        }
+
+        switch lifecycleState {
+        case .warmup:
+            return G7DeviceStatusHighlight(
+                localizedMessage: LocalizedString("Sensor\nWarmup", comment: "G7 Status highlight text for sensor warmup"),
+                imageName: "clock",
+                state: .normalCGM)
+        case .error:
+            return G7DeviceStatusHighlight(
+                localizedMessage: LocalizedString("Sensor\nError", comment: "G7 Status highlight text for sensor error"),
+                imageName: "exclamationmark.circle.fill",
+                state: .warning)
+        default:
+            return nil
+        }
+
     }
 
     // TODO Placeholder.

@@ -54,6 +54,46 @@ public enum CalibrationState: RawRepresentable {
         }
     }
 
+    public var sensorFailed: Bool {
+        guard case .known(let state) = self else {
+            return false
+        }
+
+        switch state {
+        case .sensorFailure11, .sensorFailure12, .sessionFailure15, .sessionFailure16, .sessionFailure17:
+            return true
+        default:
+            return false
+        }
+    }
+
+    public var isInWarmup: Bool {
+        guard case .known(let state) = self else {
+            return false
+        }
+
+        switch state {
+        case .warmup:
+            return true
+        default:
+            return false
+        }
+    }
+
+    public var isInSensorError: Bool {
+        guard case .known(let state) = self else {
+            return false
+        }
+
+        switch state {
+        case .calibrationError8, .calibrationError9, .calibrationError10, .calibrationError13, .questionMarks:
+            return true
+        default:
+            return false
+        }
+    }
+
+
     public var hasReliableGlucose: Bool {
         guard case .known(let state) = self else {
             return false

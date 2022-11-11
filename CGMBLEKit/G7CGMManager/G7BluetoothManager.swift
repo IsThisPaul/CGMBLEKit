@@ -1,9 +1,9 @@
 //
-//  BluetoothManager.swift
-//  xDripG5
+//  G7BluetoothManager.swift
+//  CGMBLEKit
 //
-//  Created by Nathan Racklyeft on 10/1/15.
-//  Copyright © 2015 Nathan Racklyeft. All rights reserved.
+//  Created by Pete Schwamb on 11/11/22.
+//  Copyright © 2022 LoopKit Authors. All rights reserved.
 //
 
 import CoreBluetooth
@@ -11,7 +11,7 @@ import Foundation
 import os.log
 
 
-protocol BluetoothManagerDelegate: AnyObject {
+protocol G7BluetoothManagerDelegate: AnyObject {
 
     /**
      Tells the delegate that the bluetooth manager has finished connecting to and discovering all required services of its peripheral, or that it failed to do so
@@ -20,7 +20,7 @@ protocol BluetoothManagerDelegate: AnyObject {
      - parameter peripheralManager: The peripheral manager
      - parameter error:   An error describing why bluetooth setup failed
      */
-    func bluetoothManager(_ manager: BluetoothManager, peripheralManager: PeripheralManager, isReadyWithError error: Error?)
+    func bluetoothManager(_ manager: G7BluetoothManager, peripheralManager: G7PeripheralManager, isReadyWithError error: Error?)
 
     /**
      Asks the delegate whether the discovered or restored peripheral should be connected
@@ -30,7 +30,7 @@ protocol BluetoothManagerDelegate: AnyObject {
 
      - returns: True if the peripheral should connect
      */
-    func bluetoothManager(_ manager: BluetoothManager, shouldConnectPeripheral peripheral: CBPeripheral) -> Bool
+    func bluetoothManager(_ manager: G7BluetoothManager, shouldConnectPeripheral peripheral: CBPeripheral) -> Bool
 
     /// Informs the delegate that the bluetooth manager received new data in the control characteristic
     ///
@@ -38,14 +38,14 @@ protocol BluetoothManagerDelegate: AnyObject {
     ///   - manager: The bluetooth manager
     ///   - peripheralManager: The peripheral manager
     ///   - response: The data received on the control characteristic
-    func bluetoothManager(_ manager: BluetoothManager, peripheralManager: PeripheralManager, didReceiveControlResponse response: Data)
+    func bluetoothManager(_ manager: G7BluetoothManager, peripheralManager: G7PeripheralManager, didReceiveControlResponse response: Data)
 
     /// Informs the delegate that the bluetooth manager received new data in the backfill characteristic
     ///
     /// - Parameters:
     ///   - manager: The bluetooth manager
     ///   - response: The data received on the backfill characteristic
-    func bluetoothManager(_ manager: BluetoothManager, didReceiveBackfillResponse response: Data)
+    func bluetoothManager(_ manager: G7BluetoothManager, didReceiveBackfillResponse response: Data)
 
     /// Informs the delegate that the bluetooth manager received new data in the authentication characteristic
     ///
@@ -53,17 +53,17 @@ protocol BluetoothManagerDelegate: AnyObject {
     ///   - manager: The bluetooth manager
     ///   - peripheralManager: The peripheral manager
     ///   - response: The data received on the authentication characteristic
-    func bluetoothManager(_ manager: BluetoothManager, peripheralManager: PeripheralManager, didReceiveAuthenticationResponse response: Data)
+    func bluetoothManager(_ manager: G7BluetoothManager, peripheralManager: PeripheralManager, didReceiveAuthenticationResponse response: Data)
 
     /// Informs the delegate that the bluetooth manager started or stopped scanning
     ///
     /// - Parameters:
     ///   - manager: The bluetooth manager
-    func bluetoothManagerScanningStatusDidChange(_ manager: BluetoothManager)
+    func bluetoothManagerScanningStatusDidChange(_ manager: G7BluetoothManager)
 }
 
 
-class BluetoothManager: NSObject {
+class G7BluetoothManager: NSObject {
 
     var stayConnected: Bool {
         get {
@@ -86,9 +86,9 @@ class BluetoothManager: NSObject {
     private let lockedScanWhileConnecting: Locked<Bool> = Locked(false)
 
 
-    weak var delegate: BluetoothManagerDelegate?
+    weak var delegate: G7BluetoothManagerDelegate?
 
-    private let log = OSLog(category: "BluetoothManager")
+    private let log = OSLog(category: "G7BluetoothManager")
 
     /// Isolated to `managerQueue`
     private var centralManager: CBCentralManager! = nil
@@ -107,9 +107,9 @@ class BluetoothManager: NSObject {
             if let peripheralManager = peripheralManager {
                 peripheralManager.peripheral = peripheral
             } else {
-                peripheralManager = PeripheralManager(
+                peripheralManager = G7PeripheralManager(
                     peripheral: peripheral,
-                    configuration: .dexcomG5,
+                    configuration: .dexcomG7,
                     centralManager: centralManager
                 )
             }
@@ -127,7 +127,7 @@ class BluetoothManager: NSObject {
     private let lockedPeripheralIdentifier: Locked<UUID?> = Locked(nil)
 
     /// Isolated to `managerQueue`
-    private var peripheralManager: PeripheralManager? {
+    private var peripheralManager: G7PeripheralManager? {
         didSet {
             oldValue?.delegate = nil
             peripheralManager?.delegate = self
@@ -232,10 +232,10 @@ class BluetoothManager: NSObject {
     }
 
     /**
-    
+
      Persistent connections don't seem to work with the transmitter shutoff: The OS won't re-wake the
      app unless it's scanning.
-     
+
      The sleep gives the transmitter time to shut down, but keeps the app running.
 
      */
@@ -377,9 +377,9 @@ extension BluetoothManager: CBCentralManagerDelegate {
 }
 
 
-extension BluetoothManager: PeripheralManagerDelegate {
+extension G7BluetoothManager: PeripheralManagerDelegate {
     func peripheralManager(_ manager: PeripheralManager, didReadRSSI RSSI: NSNumber, error: Error?) {
-        
+
     }
 
     func peripheralManagerDidUpdateName(_ manager: PeripheralManager) {

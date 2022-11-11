@@ -191,6 +191,12 @@
 		C13388DA28E0E2D7008CEDE7 /* G7BackfillMessageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13388D928E0E2D7008CEDE7 /* G7BackfillMessageTests.swift */; };
 		C13388DC28E1DC79008CEDE7 /* G7CGMManagerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C13388DB28E1DC79008CEDE7 /* G7CGMManagerState.swift */; };
 		C15543B2252D8777008EE7E5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C15543B1252D8776008EE7E5 /* Assets.xcassets */; };
+		C16B0C0C29059ACD00106BA8 /* G7LifecycleBarViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16B0C0B29059ACD00106BA8 /* G7LifecycleBarViewModel.swift */; };
+		C16B0C0E29059C3000106BA8 /* DateComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16B0C0D29059C3000106BA8 /* DateComponents.swift */; };
+		C16B0C102905A49400106BA8 /* G7DeviceStatus.swift in Sources */ = {isa = PBXBuildFile; fileRef = C16B0C0F2905A49400106BA8 /* G7DeviceStatus.swift */; };
+		C16B0C112905C01B00106BA8 /* TimeInterval.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4379CFD1210EB0F700AADC79 /* TimeInterval.swift */; };
+		C17F5097291EA88900555EB5 /* G7BluetoothManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17F5096291EA88900555EB5 /* G7BluetoothManager.swift */; };
+		C17F5099291EA8CD00555EB5 /* G7PeripheralManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = C17F5098291EA8CD00555EB5 /* G7PeripheralManager.swift */; };
 		C19084BB203932BD00AA47F3 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C19084B9203932BD00AA47F3 /* Main.storyboard */; };
 		C19C8BDB286520970056D5E4 /* CGMBLEKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43CABDF31C3506F100005705 /* CGMBLEKit.framework */; };
 		C19C8BDC286520970056D5E4 /* CGMBLEKit.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 43CABDF31C3506F100005705 /* CGMBLEKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -638,6 +644,11 @@
 		C13388D928E0E2D7008CEDE7 /* G7BackfillMessageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = G7BackfillMessageTests.swift; sourceTree = "<group>"; };
 		C13388DB28E1DC79008CEDE7 /* G7CGMManagerState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = G7CGMManagerState.swift; sourceTree = "<group>"; };
 		C15543B1252D8776008EE7E5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C16B0C0B29059ACD00106BA8 /* G7LifecycleBarViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = G7LifecycleBarViewModel.swift; sourceTree = "<group>"; };
+		C16B0C0D29059C3000106BA8 /* DateComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DateComponents.swift; sourceTree = "<group>"; };
+		C16B0C0F2905A49400106BA8 /* G7DeviceStatus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = G7DeviceStatus.swift; sourceTree = "<group>"; };
+		C17F5096291EA88900555EB5 /* G7BluetoothManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = G7BluetoothManager.swift; sourceTree = "<group>"; };
+		C17F5098291EA8CD00555EB5 /* G7PeripheralManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = G7PeripheralManager.swift; sourceTree = "<group>"; };
 		C19084BA203932BD00AA47F3 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		C1BA047528DF89FD00CD6BA4 /* CGMBLEKitG7Plugin.loopplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = CGMBLEKitG7Plugin.loopplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		C1BA047828DF8A8200CD6BA4 /* CGMBLEKitG7Plugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CGMBLEKitG7Plugin.swift; sourceTree = "<group>"; };
@@ -1034,6 +1045,7 @@
 				C1BFEA0F28DF989000F7C943 /* G7StartupView.swift */,
 				C13388D328E08D0B008CEDE7 /* G7SettingsView.swift */,
 				C105919628ED32F900666CCA /* G7SettingsViewModel.swift */,
+				C16B0C0B29059ACD00106BA8 /* G7LifecycleBarViewModel.swift */,
 			);
 			path = G7CGMManager;
 			sourceTree = "<group>";
@@ -1042,6 +1054,7 @@
 			isa = PBXGroup;
 			children = (
 				C1BFEA1428DF99AD00F7C943 /* Image.swift */,
+				C16B0C0D29059C3000106BA8 /* DateComponents.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -1056,6 +1069,9 @@
 				C13388D728E0E24D008CEDE7 /* G7BackfillMessage.swift */,
 				C13388DB28E1DC79008CEDE7 /* G7CGMManagerState.swift */,
 				C105919428ED219A00666CCA /* G7LastReading.swift */,
+				C16B0C0F2905A49400106BA8 /* G7DeviceStatus.swift */,
+				C17F5096291EA88900555EB5 /* G7BluetoothManager.swift */,
+				C17F5098291EA8CD00555EB5 /* G7PeripheralManager.swift */,
 			);
 			path = G7CGMManager;
 			sourceTree = "<group>";
@@ -1483,7 +1499,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				4379CFE1210EC27500AADC79 /* HKUnit.swift in Sources */,
+				C16B0C0C29059ACD00106BA8 /* G7LifecycleBarViewModel.swift in Sources */,
 				C1BFEA1528DF99AD00F7C943 /* Image.swift in Sources */,
+				C16B0C112905C01B00106BA8 /* TimeInterval.swift in Sources */,
+				C16B0C0E29059C3000106BA8 /* DateComponents.swift in Sources */,
 				C1BFEA0E28DF96A600F7C943 /* G7CGMManager+UI.swift in Sources */,
 				C1BFEA1028DF989000F7C943 /* G7StartupView.swift in Sources */,
 				4325E9E8210EAED100969CE5 /* TransmitterManager+UI.swift in Sources */,
@@ -1522,6 +1541,7 @@
 				43E397931D56950C0028E321 /* HKUnit.swift in Sources */,
 				43846AC61D8F896C00799272 /* CalibrationDataRxMessage.swift in Sources */,
 				43CE7CD01CA73C57003CC1B0 /* SessionStopTxMessage.swift in Sources */,
+				C16B0C102905A49400106BA8 /* G7DeviceStatus.swift in Sources */,
 				431CE7671F91D0B300255374 /* PeripheralManager+G5.swift in Sources */,
 				43CABE2A1C350B3D00005705 /* GlucoseTxMessage.swift in Sources */,
 				C1BFEA1728DF9DA600F7C943 /* G7CGMManager.swift in Sources */,
@@ -1537,6 +1557,7 @@
 				43CABE2E1C350B3D00005705 /* TransmitterTimeTxMessage.swift in Sources */,
 				4379CFD4210EB14900AADC79 /* Glucose+SensorDisplayable.swift in Sources */,
 				43880F981D9E19FC009061A8 /* TransmitterVersionRxMessage.swift in Sources */,
+				C17F5097291EA88900555EB5 /* G7BluetoothManager.swift in Sources */,
 				43CABE2C1C350B3D00005705 /* TransmitterMessage.swift in Sources */,
 				E75DB6AE20419B5D00FBE04E /* CalibrateGlucoseRxMessage.swift in Sources */,
 				43CABE131C350B2800005705 /* BluetoothServices.swift in Sources */,
@@ -1554,6 +1575,7 @@
 				43CABE241C350B3D00005705 /* AuthChallengeTxMessage.swift in Sources */,
 				4379CFD2210EB0F700AADC79 /* TimeInterval.swift in Sources */,
 				43CE7CD21CA73CBC003CC1B0 /* CalibrateGlucoseTxMessage.swift in Sources */,
+				C17F5099291EA8CD00555EB5 /* G7PeripheralManager.swift in Sources */,
 				43F82BD01D035D68006F5DD7 /* SessionStopRxMessage.swift in Sources */,
 				43F82BCE1D035D5C006F5DD7 /* SessionStartRxMessage.swift in Sources */,
 				435535D41FB2C1B000CE5A23 /* PeripheralManagerError.swift in Sources */,

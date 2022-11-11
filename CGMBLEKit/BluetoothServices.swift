@@ -56,8 +56,8 @@ enum CGMServiceCharacteristicUUID: String, CBUUIDRawValue {
 //    // Unknown attribute present on older G6 transmitters
 //    case unknown1 = "F8083537-849E-531C-C594-30F1F86A4EA5"
 //
-//    // Updated G6 characteristic (read/notify)
-//    case unknown2 = "F8083538-849E-531C-C594-30F1F86A4EA5"
+//    // Updated G6/G6 Key Exchange characteristic (read/notify)
+//    case keyExchange = "F8083538-849E-531C-C594-30F1F86A4EA5"
 }
 
 
@@ -71,6 +71,23 @@ enum ServiceBCharacteristicUUID: String, CBUUIDRawValue {
 
 extension PeripheralManager.Configuration {
     static var dexcomG5: PeripheralManager.Configuration {
+        return PeripheralManager.Configuration(
+            serviceCharacteristics: [
+                TransmitterServiceUUID.cgmService.cbUUID: [
+                    CGMServiceCharacteristicUUID.communication.cbUUID,
+                    CGMServiceCharacteristicUUID.authentication.cbUUID,
+                    CGMServiceCharacteristicUUID.control.cbUUID,
+                    CGMServiceCharacteristicUUID.backfill.cbUUID,
+                ]
+            ],
+            notifyingCharacteristics: [:],
+            valueUpdateMacros: [:]
+        )
+    }
+}
+
+extension G7PeripheralManager.Configuration {
+    static var dexcomG7: PeripheralManager.Configuration {
         return PeripheralManager.Configuration(
             serviceCharacteristics: [
                 TransmitterServiceUUID.cgmService.cbUUID: [
